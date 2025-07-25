@@ -95,7 +95,7 @@
     latenciaInfo.style.fontSize = '13px';
     latenciaInfo.style.color = '#555';
     latenciaInfo.style.textAlign = 'center';
-    latenciaInfo.textContent = '⏳ Verificando latência...';
+    latenciaInfo.textContent = '⏳ Medindo latência...';
     container.appendChild(latenciaInfo);
 
     const statusExecucao = document.createElement('div');
@@ -131,42 +131,19 @@
         relogio.textContent = `🕒 ${horarioFormatado}`;
     }, 1);
 
-    function obterLatenciaDoHTML() {
-        const serverTime = document.querySelector('#serverTime');
-        if (serverTime) {
-            const titleAttr = serverTime.getAttribute('title') || serverTime.getAttribute('data-title');
-            if (titleAttr && titleAttr.includes('Latency')) {
-                const match = titleAttr.match(/Latency:\s*([\d.]+)ms/);
-                if (match) {
-                    return parseFloat(match[1]);
-                }
-            }
-        }
-        return null;
-    }
-
-    async function atualizarLatencia() {
-        const latenciaHTML = obterLatenciaDoHTML();
-        if (latenciaHTML !== null) {
-            latenciaMs = latenciaHTML;
-            latenciaInfo.textContent = `📡 Latência detectada no DOM: ${latenciaMs.toFixed(1)} ms`;
-            return;
-        }
-
+    setInterval(async () => {
         const inicio = performance.now();
         try {
             await fetch('/game.php', { cache: "no-store" });
             const fim = performance.now();
-            latenciaMs = fim - inicio;
-            latenciaInfo.textContent = `📡 Latência real medida: ${latenciaMs.toFixed(1)} ms`;
-        } catch {
+            const ping = fim - inicio;
+            latenciaMs = ping * 0.05;
+            latenciaInfo.textContent = `📡 Latência estimada (ping/2): ${latenciaMs.toFixed(1)} ms`;
+        } catch (erro) {
             latenciaMs = 0;
             latenciaInfo.textContent = '⚠️ Falha ao medir latência';
         }
-    }
-
-    setInterval(atualizarLatencia, 100);
-    atualizarLatencia();
+    }, 499);
 
     botaoCopiar.addEventListener('click', () => {
         input.value = horarioFormatado;
