@@ -1,4 +1,16 @@
+// ==UserScript==
+// @name         Temporizador de Comandos ATK
+// @namespace    http://tampermonkey.net/
+// @version      1.1
+// @description  Temporizador de envio de ataques no Tribal Wars com ajuste manual da latência
+// @author       Gustavo.M.S
+// @match        *://*.tribalwars.com.br/*
+// @grant        none
+// ==/UserScript==
+
 (function () {
+    'use strict';
+
     if (document.getElementById('temporizadorGustavoMS')) return;
 
     const container = document.createElement('div');
@@ -59,9 +71,9 @@
     input.style.fontSize = '14px';
     container.appendChild(input);
 
-    // Campo para o multiplicador
+    // Campo de multiplicador
     const labelMultiplicador = document.createElement('label');
-    labelMultiplicador.textContent = 'Multiplicador da Latência / Fator de Ajuste - Depende da sua conexão';
+    labelMultiplicador.textContent = 'Multiplicador da Latência';
     labelMultiplicador.style.display = 'block';
     labelMultiplicador.style.margin = '6px 0 2px';
     container.appendChild(labelMultiplicador);
@@ -69,7 +81,7 @@
     const inputMultiplicador = document.createElement('input');
     inputMultiplicador.type = 'number';
     inputMultiplicador.step = '0.01';
-    inputMultiplicador.value = '0.35'; // valor padrão
+    inputMultiplicador.value = '0.35';
     inputMultiplicador.style.width = '80px';
     inputMultiplicador.style.padding = '3px';
     inputMultiplicador.style.marginBottom = '6px';
@@ -153,7 +165,7 @@
             await fetch('/game.php', { cache: "no-store" });
             const fim = performance.now();
             const ping = fim - inicio;
-            const fator = parseFloat(inputMultiplicador.value) || 0; // pega valor definido pelo usuário
+            const fator = parseFloat(inputMultiplicador.value) || 0;
             latenciaMs = ping * fator;
             latenciaInfo.textContent = `📡 Latência: ${latenciaMs.toFixed(1)} ms (ping ${ping.toFixed(1)} ms)`;
         } catch (erro) {
