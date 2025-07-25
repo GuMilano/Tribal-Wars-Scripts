@@ -138,7 +138,7 @@
             const fim = performance.now();
             const ping = fim - inicio;
             latenciaMs = ping * 0.05;
-            latenciaInfo.textContent = `📡 Latência estimada (ping/2): ${latenciaMs.toFixed(1)} ms`;
+            latenciaInfo.textContent = `📡 Latência estimada: ${latenciaMs.toFixed(1)} ms`;
         } catch (erro) {
             latenciaMs = 0;
             latenciaInfo.textContent = '⚠️ Falha ao medir latência';
