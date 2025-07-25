@@ -95,7 +95,7 @@
     latenciaInfo.style.fontSize = '13px';
     latenciaInfo.style.color = '#555';
     latenciaInfo.style.textAlign = 'center';
-    latenciaInfo.textContent = '';
+    latenciaInfo.textContent = '⏳ Verificando latência...';
     container.appendChild(latenciaInfo);
 
     const statusExecucao = document.createElement('div');
@@ -127,21 +127,46 @@
         const dia = String(agora.getDate()).padStart(2, '0');
         const mes = String(agora.getMonth() + 1).padStart(2, '0');
         const ano = agora.getFullYear();
-    horarioFormatado = `${h}:${m}:${s}.${ms} ${dia}/${mes}/${ano}`;
-    relogio.textContent = `🕒 ${horarioFormatado}`;
+        horarioFormatado = `${h}:${m}:${s}.${ms} ${dia}/${mes}/${ano}`;
+        relogio.textContent = `🕒 ${horarioFormatado}`;
+    }, 1);
 
-    const latenciaStr = document.querySelector('#serverTime')?.getAttribute('title');
-    if (latenciaStr && latenciaStr.includes('Latency')) {
-        const match = latenciaStr.match(/Latency:\s*([\d.]+)ms/);
-        if (match) {
-            latenciaMs = parseFloat(match[1]);
-            latenciaInfo.textContent = `📡 Latência detectada: ${latenciaMs.toFixed(1)}ms`;
-        } else {
+    function obterLatenciaDoHTML() {
+        const serverTime = document.querySelector('#serverTime');
+        if (serverTime) {
+            const titleAttr = serverTime.getAttribute('title') || serverTime.getAttribute('data-title');
+            if (titleAttr && titleAttr.includes('Latency')) {
+                const match = titleAttr.match(/Latency:\s*([\d.]+)ms/);
+                if (match) {
+                    return parseFloat(match[1]);
+                }
+            }
+        }
+        return null;
+    }
+
+    async function atualizarLatencia() {
+        const latenciaHTML = obterLatenciaDoHTML();
+        if (latenciaHTML !== null) {
+            latenciaMs = latenciaHTML;
+            latenciaInfo.textContent = `📡 Latência detectada no DOM: ${latenciaMs.toFixed(1)} ms`;
+            return;
+        }
+
+        const inicio = performance.now();
+        try {
+            await fetch('/game.php', { cache: "no-store" });
+            const fim = performance.now();
+            latenciaMs = fim - inicio;
+            latenciaInfo.textContent = `📡 Latência real medida: ${latenciaMs.toFixed(1)} ms`;
+        } catch {
             latenciaMs = 0;
-            latenciaInfo.textContent = '⚠️ Latência não detectada – envio será no horário exato';
+            latenciaInfo.textContent = '⚠️ Falha ao medir latência';
         }
     }
-}, 1);
+
+    setInterval(atualizarLatencia, 100);
+    atualizarLatencia();
 
     botaoCopiar.addEventListener('click', () => {
         input.value = horarioFormatado;
@@ -163,7 +188,7 @@
         const dataAlvo = new Date(ano, mes - 1, dia, hh, mm, ss, ms);
         dataAlvo.setMilliseconds(dataAlvo.getMilliseconds() - latenciaMs);
 
-        statusExecucao.textContent = '⏳ Código em execução... aguardando horário exato';
+        statusExecucao.textContent = '⏳ Aguardando horário exato...';
 
         const intervalo = setInterval(() => {
             const agora = new Date();
