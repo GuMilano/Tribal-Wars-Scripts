@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         AutoFarm Brbs FINAL (Popup Config + Delay + Fechar)
+// @name         AutoFarm Brbs FINAL (Completo)
 // @namespace    http://tampermonkey.net/
-// @version      6.0
-// @description  AutoFarm com popup estilizado, delay configurável, reset, drag e botão fechar
+// @version      7.0
+// @description  AutoFarm completo com delay, pause, reset, drag, troca de aldeia opcional e configurações salvas
 // @match        *://*.tribalwars.com.br/game.php*
 // @grant        none
 // ==/UserScript==
@@ -23,7 +23,7 @@
     }
 
     function getDelay() {
-        return parseInt(localStorage.getItem("autoFarm_delay") || "700000"); // 700s padrão
+        return parseInt(localStorage.getItem("autoFarm_delay") || "700000"); // ms
     }
 
     function saveTroopConfig() {
@@ -33,11 +33,21 @@
     }
 
     function resetConfig() {
-        ["autoFarmCoords","autoFarm_spear","autoFarm_sword","autoFarm_axe","autoFarm_light","autoFarm_spy","autoFarm_delay"]
-            .forEach(k=> localStorage.removeItem(k));
+        [
+            "autoFarmCoords",
+            "autoFarm_spear",
+            "autoFarm_sword",
+            "autoFarm_axe",
+            "autoFarm_light",
+            "autoFarm_spy",
+            "autoFarm_delay",
+            "autoFarm_autoSwitch"
+        ].forEach(k => localStorage.removeItem(k));
+
         alert("⚠️ Configuração resetada!");
         document.querySelectorAll(".autoFarmInput").forEach(input => input.value = 0);
         document.querySelector("#autoFarmDelay").value = 700000;
+        document.querySelector("#autoSwitchVillage").checked = false;
         updateButtonText();
     }
 
@@ -64,7 +74,7 @@
             zIndex: "9999",
             boxShadow: "0 0 10px rgba(0,0,0,0.5)",
             fontFamily: "Verdana, sans-serif",
-            minWidth: "230px",
+            minWidth: "250px",
             cursor: "move"
         });
 
@@ -82,7 +92,7 @@
         closeBtn.addEventListener("click", () => popup.style.display = "none");
 
         let title = document.createElement("div");
-        title.textContent = "🌾 Barbarian Auto Mapper ";
+        title.textContent = "🌾 Barbarian Auto Mapper";
         Object.assign(title.style, {
             fontWeight: "bold",
             fontSize: "16px",
@@ -97,15 +107,15 @@
             <b>⚙️ Tropas:</b><br>
             <table style="width: 100%; font-size:13px; margin-top:4px;">
                 <tr><td>🛡️ Lançeiros:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_spear" min="0" style="width:50px"></td></tr>
-                <tr><td>⚔️ Espadachin:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_sword" min="0" style="width:50px"></td></tr>
-                <tr><td>🪓 Barbaros:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_axe" min="0" style="width:50px"></td></tr>
+                <tr><td>⚔️ Espadachins:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_sword" min="0" style="width:50px"></td></tr>
+                <tr><td>🪓 Bárbaros:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_axe" min="0" style="width:50px"></td></tr>
                 <tr><td>🐎 Cavalaria Leve:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_light" min="0" style="width:50px"></td></tr>
-                <tr><td>🕵️ SPY:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_spy" min="0" style="width:50px"></td></tr>
+                <tr><td>🕵️ Espiões:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_spy" min="0" style="width:50px"></td></tr>
             </table>
             <br>
         `;
 
-        // Delay configurável
+        // Delay
         let delayDiv = document.createElement("div");
         delayDiv.style.marginBottom = "10px";
         delayDiv.innerHTML = `
@@ -115,6 +125,15 @@
             </div>
         `;
 
+        // Checkbox troca de aldeia
+        let autoSwitchDiv = document.createElement("div");
+        autoSwitchDiv.style.marginBottom = "8px";
+        autoSwitchDiv.innerHTML = `
+          <label style="font-size:13px;">
+            <input type="checkbox" id="autoSwitchVillage"> Trocar para próxima aldeia automaticamente
+          </label>
+        `;
+
         setTimeout(() => {
             troopDiv.querySelectorAll(".autoFarmInput").forEach(input => {
                 input.value = localStorage.getItem(input.dataset.key) || "0";
@@ -122,10 +141,16 @@
             });
 
             let delayInput = document.querySelector("#autoFarmDelay");
-            delayInput.value = getDelay() / 1000; // mostra em segundos
+            delayInput.value = getDelay() / 1000;
             delayInput.addEventListener("change", () => {
                 let seconds = parseInt(delayInput.value) || 1;
-                localStorage.setItem("autoFarm_delay", seconds * 1000); // salva em ms
+                localStorage.setItem("autoFarm_delay", seconds * 1000);
+            });
+
+            let autoSwitch = document.querySelector("#autoSwitchVillage");
+            autoSwitch.checked = localStorage.getItem("autoFarm_autoSwitch") === "1";
+            autoSwitch.addEventListener("change", () => {
+                localStorage.setItem("autoFarm_autoSwitch", autoSwitch.checked ? "1" : "0");
             });
         }, 100);
 
@@ -153,6 +178,7 @@
         popup.appendChild(title);
         popup.appendChild(troopDiv);
         popup.appendChild(delayDiv);
+        popup.appendChild(autoSwitchDiv);
         popup.appendChild(saveBtn);
         popup.appendChild(startBtn);
         popup.appendChild(resetBtn);
@@ -167,7 +193,6 @@
         }
         updateButtonText();
 
-        // Atalho para reabrir popup: tecla "P"
         document.addEventListener("keydown", (e) => {
             if (e.key.toLowerCase() === "p") popup.style.display = "block";
         });
@@ -194,15 +219,12 @@
 
     function makeDraggable(el) {
         let offsetX = 0, offsetY = 0, isDown = false;
-
         el.addEventListener("mousedown", e => {
             isDown = true;
             offsetX = e.clientX - el.offsetLeft;
             offsetY = e.clientY - el.offsetTop;
         });
-
         document.addEventListener("mouseup", () => isDown = false);
-
         document.addEventListener("mousemove", e => {
             if (!isDown) return;
             el.style.left = (e.clientX - offsetX) + "px";
@@ -211,13 +233,39 @@
     }
 
     function saveCoords() {
+        // Primeiro tenta pegar do #barbCoordsScript
         let textarea = document.querySelector("#barbCoordsScript");
-        if (!textarea) return alert("⚠️ Vá até o BrbsFarmsFinder primeiro!");
-        let newCoords = textarea.value.match(/\d+\|\d+/g) || [];
-        if (!newCoords.length) return alert("⚠️ Nenhuma coordenada encontrada.");
+        let coordsText = "";
+
+        if (textarea) {
+            coordsText = textarea.value;
+        }
+
+        // Se não encontrou nada, tenta pegar do #barbCoordsList
+        if (!coordsText) {
+            let altArea = document.querySelector("#barbCoordsList");
+            if (altArea) coordsText = altArea.value;
+        }
+
+        if (!coordsText) {
+            alert("⚠️ Nenhuma área de coordenadas encontrada na página!");
+            return;
+        }
+
+        // Extrai todas as coordenadas do texto
+        let newCoords = coordsText.match(/\d+\|\d+/g) || [];
+
+        if (!newCoords.length) {
+            alert("⚠️ Nenhuma coordenada válida encontrada.");
+            return;
+        }
+
+        // Junta com as coordenadas atuais (se o usuário escolher adicionar)
         let currentCoords = JSON.parse(localStorage.getItem("autoFarmCoords") || "[]");
-        if (currentCoords.length > 0 && confirm("Deseja ADICIONAR as novas coordenadas? (OK=Adicionar | Cancelar=Substituir)"))
+        if (currentCoords.length > 0 && confirm("Deseja ADICIONAR as novas coordenadas? (OK=Adicionar | Cancelar=Substituir)")) {
             newCoords = [...currentCoords, ...newCoords];
+        }
+
         localStorage.setItem("autoFarmCoords", JSON.stringify(newCoords));
         alert("✅ Coordenadas salvas! Total: " + newCoords.length);
         updateButtonText();
@@ -232,25 +280,30 @@
 
     function autoFarm() {
         if (!running) return;
-        let coords = JSON.parse(localStorage.getItem("autoFarmCoords") || "[]");
-        let troops = getTroopConfig();
-        // Verifica se existe a mensagem de erro de unidades insuficientes
+
+        // 🔹 Pausa ou troca de aldeia se não houver tropas
         let msgErro = document.querySelector(".error_box .content");
         if (msgErro && msgErro.textContent.includes("Não existem unidades suficientes")) {
-            let proxima = document.querySelector(".groupRight");
-            if (proxima) {
-                proxima.click(); // Vai para a próxima aldeia
-                setTimeout(() => {
-                    // Se na próxima aldeia também não houver unidades, pausa
-                    let novoErro = document.querySelector(".error_box .content");
-                    if (novoErro && novoErro.textContent.includes("Não existem unidades suficientes")) {
-                        running = false;
-                        localStorage.setItem("autoFarmRunning", "0");
-                        updateButtonText();
-                    }
-                }, 600); // Pequeno delay para carregar a nova aldeia
+            let autoSwitch = localStorage.getItem("autoFarm_autoSwitch") === "1";
+
+            if (autoSwitch) {
+                let proxima = document.querySelector(".groupRight");
+                if (proxima) {
+                    proxima.click();
+                    setTimeout(() => {
+                        let novoErro = document.querySelector(".error_box .content");
+                        if (novoErro && novoErro.textContent.includes("Não existem unidades suficientes")) {
+                            running = false;
+                            localStorage.setItem("autoFarmRunning", "0");
+                            updateButtonText();
+                        }
+                    }, 800);
+                } else {
+                    running = false;
+                    localStorage.setItem("autoFarmRunning", "0");
+                    updateButtonText();
+                }
             } else {
-                // Se não existir botão de próxima aldeia, pausa
                 running = false;
                 localStorage.setItem("autoFarmRunning", "0");
                 updateButtonText();
@@ -258,8 +311,10 @@
             return;
         }
 
+        let coords = JSON.parse(localStorage.getItem("autoFarmCoords") || "[]");
+        let troops = getTroopConfig();
+
         if (coords.length === 0) {
-            alert("✅ Todas as coordenadas foram usadas!");
             running = false;
             localStorage.setItem("autoFarmRunning", "0");
             updateButtonText();
@@ -270,12 +325,8 @@
         if (confirmBtn) {
             coords.shift();
             localStorage.setItem("autoFarmCoords", JSON.stringify(coords));
-
-        setTimeout(() => {
-            if (running && confirmBtn) confirmBtn.click(); // 🔹 agora clica no botão correto
-        }, getDelay());
-
-        return;
+            setTimeout(() => { if (running && confirmBtn) confirmBtn.click(); }, getDelay());
+            return;
         }
 
         if (document.location.href.includes("screen=place")) {
@@ -284,25 +335,20 @@
             document.forms[0].y.value = y;
             $("#place_target").find("input").val(coords[0]);
 
-        // Aguarda o código externo preencher (spy=1) e então sobrescreve
-        setTimeout(() => {
-            if (document.forms[0].spear) document.forms[0].spear.value = troops.spear > 0 ? troops.spear : "";
-            if (document.forms[0].sword) document.forms[0].sword.value = troops.sword > 0 ? troops.sword : "";
-            if (document.forms[0].axe) document.forms[0].axe.value = troops.axe > 0 ? troops.axe : "";
-            if (document.forms[0].light) document.forms[0].light.value = troops.light > 0 ? troops.light : "";
-            if (document.forms[0].spy) document.forms[0].spy.value = troops.spy > 0 ? troops.spy : "";
-        }, 60); // 🔹 pequeno delay para garantir que sobrescreva
+            setTimeout(() => {
+                if (document.forms[0].spear) document.forms[0].spear.value = troops.spear > 0 ? troops.spear : "";
+                if (document.forms[0].sword) document.forms[0].sword.value = troops.sword > 0 ? troops.sword : "";
+                if (document.forms[0].axe) document.forms[0].axe.value = troops.axe > 0 ? troops.axe : "";
+                if (document.forms[0].light) document.forms[0].light.value = troops.light > 0 ? troops.light : "";
+                if (document.forms[0].spy) document.forms[0].spy.value = troops.spy > 0 ? troops.spy : "";
+            }, 50);
 
             let attackBtn = document.querySelector("#target_attack");
-            if (attackBtn) {
-                setTimeout(() => {if (running) attackBtn.click();}, getDelay());
-            }
+            if (attackBtn) setTimeout(() => { if (running) attackBtn.click(); }, getDelay());
         }
 
         updateButtonText();
-        if (running) {
-            setTimeout(autoFarm, getDelay());
-        }
+        if (running) setTimeout(autoFarm, getDelay());
     }
 
     createPopup();
