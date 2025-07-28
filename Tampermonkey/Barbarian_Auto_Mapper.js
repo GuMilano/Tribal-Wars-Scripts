@@ -110,7 +110,7 @@
                 <tr><td>⚔️ Espadachins:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_sword" min="0" style="width:50px"></td></tr>
                 <tr><td>🪓 Bárbaros:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_axe" min="0" style="width:50px"></td></tr>
                 <tr><td>🐎 Cavalaria Leve:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_light" min="0" style="width:50px"></td></tr>
-                <tr><td>🕵️ Espiões:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_spy" min="0" style="width:50px"></td></tr>
+                <tr><td>🕵️ SPY:</td><td><input type="number" class="autoFarmInput" data-key="autoFarm_spy" min="0" style="width:50px"></td></tr>
             </table>
             <br>
         `;
