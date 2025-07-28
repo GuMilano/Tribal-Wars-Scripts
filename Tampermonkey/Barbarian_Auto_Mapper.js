@@ -237,10 +237,24 @@
         // Verifica se existe a mensagem de erro de unidades insuficientes
         let msgErro = document.querySelector(".error_box .content");
         if (msgErro && msgErro.textContent.includes("Não existem unidades suficientes")) {
-            running = false;
-            localStorage.setItem("autoFarmRunning", "0");
-            updateButtonText();
-            alert("⚠️ AutoFarm pausado: Não existem unidades suficientes!");
+            let proxima = document.querySelector(".groupRight");
+            if (proxima) {
+                proxima.click(); // Vai para a próxima aldeia
+                setTimeout(() => {
+                    // Se na próxima aldeia também não houver unidades, pausa
+                    let novoErro = document.querySelector(".error_box .content");
+                    if (novoErro && novoErro.textContent.includes("Não existem unidades suficientes")) {
+                        running = false;
+                        localStorage.setItem("autoFarmRunning", "0");
+                        updateButtonText();
+                    }
+                }, 600); // Pequeno delay para carregar a nova aldeia
+            } else {
+                // Se não existir botão de próxima aldeia, pausa
+                running = false;
+                localStorage.setItem("autoFarmRunning", "0");
+                updateButtonText();
+            }
             return;
         }
 
@@ -268,7 +282,7 @@
             let [x, y] = coords[0].split("|");
             document.forms[0].x.value = x;
             document.forms[0].y.value = y;
-            $("#place_target").find("input").val(coords[0]);   
+            $("#place_target").find("input").val(coords[0]);
 
         // Aguarda o código externo preencher (spy=1) e então sobrescreve
         setTimeout(() => {
