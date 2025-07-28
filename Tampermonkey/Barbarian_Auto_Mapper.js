@@ -249,23 +249,26 @@
             localStorage.setItem("autoFarmCoords", JSON.stringify(coords));
 
         setTimeout(() => {
-            if (running) document.forms[0].submit();
+            if (running && confirmBtn) confirmBtn.click(); // 🔹 agora clica no botão correto
         }, getDelay());
+        
+        return;
         }
 
         if (document.location.href.includes("screen=place")) {
             let [x, y] = coords[0].split("|");
             document.forms[0].x.value = x;
             document.forms[0].y.value = y;
-            $("#place_target").find("input").val(coords[0]);
-            // Primeiro coloca spy=1 como padrão
-            document.forms[0].spy.value = 0;            
+            $("#place_target").find("input").val(coords[0]);   
 
+        // Aguarda o código externo preencher (spy=1) e então sobrescreve
+        setTimeout(() => {
             if (document.forms[0].spear) document.forms[0].spear.value = troops.spear > 0 ? troops.spear : "";
             if (document.forms[0].sword) document.forms[0].sword.value = troops.sword > 0 ? troops.sword : "";
             if (document.forms[0].axe) document.forms[0].axe.value = troops.axe > 0 ? troops.axe : "";
             if (document.forms[0].light) document.forms[0].light.value = troops.light > 0 ? troops.light : "";
             if (document.forms[0].spy) document.forms[0].spy.value = troops.spy > 0 ? troops.spy : "";
+        }, 60); // 🔹 pequeno delay para garantir que sobrescreva
 
             let attackBtn = document.querySelector("#target_attack");
             if (attackBtn) {
