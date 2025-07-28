@@ -234,6 +234,15 @@
         if (!running) return;
         let coords = JSON.parse(localStorage.getItem("autoFarmCoords") || "[]");
         let troops = getTroopConfig();
+        // Verifica se existe a mensagem de erro de unidades insuficientes
+        let msgErro = document.querySelector(".error_box .content");
+        if (msgErro && msgErro.textContent.includes("Não existem unidades suficientes")) {
+            running = false;
+            localStorage.setItem("autoFarmRunning", "0");
+            updateButtonText();
+            alert("⚠️ AutoFarm pausado: Não existem unidades suficientes!");
+            return;
+        }
 
         if (coords.length === 0) {
             alert("✅ Todas as coordenadas foram usadas!");
@@ -251,7 +260,7 @@
         setTimeout(() => {
             if (running && confirmBtn) confirmBtn.click(); // 🔹 agora clica no botão correto
         }, getDelay());
-        
+
         return;
         }
 
