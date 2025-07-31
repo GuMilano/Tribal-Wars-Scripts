@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoFarm Brbs FINAL (Completo)
 // @namespace    http://tampermonkey.net/
-// @version      7.0
+// @version      8.0
 // @description  AutoFarm completo com delay, pause, reset, drag, troca de aldeia opcional e configurações salvas
 // @match        *://*.tribalwars.com.br/game.php*
 // @grant        none
@@ -280,6 +280,21 @@
 
     function autoFarm() {
         if (!running) return;
+        // 🔹 Verificação de proteção contra bot
+        let botButton = document.querySelector("a.btn.btn-default");
+        if (botButton && botButton.textContent.includes("Iniciar a verificação da proteção do bot")) {
+            console.log("⚠️ Proteção de bot detectada. Iniciando verificação...");
+            botButton.click(); // Clica no botão
+
+            setTimeout(() => {
+                let check = document.querySelector("#checkbox");
+                if (check) {
+                    check.click(); // Marca o checkbox
+                    console.log("✅ Checkbox da proteção marcado.");
+                }
+            }, 6000); // Aguarda 1.5s para o checkbox aparecer
+            return; // Para a execução normal do AutoFarm até resolver a verificação
+        }
 
         // 🔹 Pausa ou troca de aldeia se não houver tropas
         let msgErro = document.querySelector(".error_box .content");
