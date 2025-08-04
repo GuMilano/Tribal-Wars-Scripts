@@ -25,7 +25,7 @@ javascript:(function(){
             buttons.forEach((el,i)=>{
                 setTimeout(()=>{ 
                     if(document.body.contains(el)) el.click(); 
-                }, i*600);
+                }, i*300);
             });
 
             // Depois de clicar em todos, verifica se ainda sobrou algum
