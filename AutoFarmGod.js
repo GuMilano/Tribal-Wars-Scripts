@@ -35,7 +35,7 @@ javascript:(function(){
                     console.log("🔄 Alguns botões sobraram, tentando novamente...");
                     clickButtons(); // tenta de novo até acabar
                 }
-            }, (buttons.length*600) + 600); // espera todos cliques terminarem
+            }, (buttons.length*300) + 300); // espera todos cliques terminarem
         }
 
         // Espera a tabela aparecer antes de iniciar
@@ -44,7 +44,7 @@ javascript:(function(){
             if(buttons.length > 0){
                 clickButtons();
             } else {
-                setTimeout(waitForButtons, 600);
+                setTimeout(waitForButtons, 700);
             }
         }
 
